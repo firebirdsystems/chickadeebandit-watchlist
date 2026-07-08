@@ -1,0 +1,36 @@
+{
+  "id": "watchlist",
+  "name": "Family Watchlist",
+  "version": "1.0.0",
+  "description": "A shared list of movies and shows the household wants to watch together. Add titles, mark them watched with a rating, filter by genre or mood, or tap Surprise Me for a random pick.",
+  "entrypoint": "index.html",
+  "runtime": "static",
+  "icon": "🍿",
+  "category": "entertainment",
+  "tags": ["movies", "shows", "watchlist", "entertainment", "family"],
+  "storage": "db",
+  "data_access": {
+    "reads": ["family.members"],
+    "writes": []
+  },
+  "permissions": {
+    "default_audience": "everyone",
+    "requires_approval": false
+  },
+  "nav": { "label": "Watchlist" },
+  "glance": {
+    "source": {
+      "kind": "sql",
+      "query": "SELECT COUNT(*) AS n FROM app_watchlist__titles WHERE status = 'unwatched' LIMIT 1"
+    },
+    "display": { "template": "badge", "count": "n", "label": "to watch", "severity": "info" }
+  },
+  "resource_limits": {
+    "max_db_bytes": 10485760
+  },
+  "ai_access": {
+    "allowed": true,
+    "mode": "read",
+    "db_exports": ["unwatched_titles", "watched_ratings"]
+  }
+}

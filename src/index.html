@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Watchlist</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: var(--hub-bg, #f9fafb);
+      --surface: var(--hub-surface, #ffffff);
+      --border: var(--hub-border, #e5e7eb);
+      --border-mid: var(--hub-border, #d1d5db);
+      --text: var(--hub-text, #111827);
+      --muted: var(--hub-text-muted, #6b7280);
+      --accent: var(--hub-primary, #7c3aed);
+      --accent-hover: var(--hub-primary-hover, #6d28d9);
+      --accent-fg: var(--hub-primary-fg, #ffffff);
+      --radius: var(--hub-radius, 8px);
+      --green: #047857;
+      --green-soft: #d1fae5;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --red: #b91c1c;
+      --red-soft: #fee2e2;
+      --blue-soft: #dbeafe;
+      --shadow: 0 1px 3px rgba(15, 23, 42, .07);
+    }
+    body {
+      min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: var(--hub-font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      font-size: var(--hub-font-size, 15px); line-height: 1.5;
+    }
+    .app { max-width: 820px; margin: 0 auto; padding: 16px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    h1 { font-size: 1.35rem; line-height: 1.2; }
+    h2 { font-size: 1rem; margin-bottom: 10px; }
+    .muted { color: var(--muted); }
+    .tiny { font-size: .78rem; }
+    .stack { display: grid; gap: 12px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px;
+    }
+    .title-card { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .title-name { font-weight: 750; font-size: 1rem; }
+    .title-meta { margin-top: 3px; color: var(--muted); font-size: .82rem; }
+    .title-note { margin-top: 6px; font-size: .9rem; }
+    .stars { color: #d97706; letter-spacing: 1px; }
+    .pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 22px; padding: 2px 8px; border-radius: 999px;
+      background: #f1f5f9; color: var(--muted); font-size: .72rem; font-weight: 700; white-space: nowrap;
+    }
+    .pill.good { background: var(--green-soft); color: var(--green); }
+    .pill.info { background: var(--blue-soft); color: #1d4ed8; }
+    .pill.warn { background: var(--amber-soft); color: var(--amber); }
+    .tabs { display: flex; gap: 4px; background: var(--border); padding: 3px; border-radius: 10px; margin-bottom: 14px; }
+    .tab { flex: 1; border: 0; border-radius: 8px; background: transparent; color: var(--muted); padding: 7px; font-weight: 700; cursor: pointer; }
+    .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .chip {
+      border: 1px solid var(--border-mid); background: var(--surface); color: var(--text);
+      border-radius: 999px; padding: 4px 11px; font-size: .78rem; font-weight: 700; cursor: pointer;
+    }
+    .chip.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid transparent; border-radius: 8px; padding: 8px 12px;
+      font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer;
+      min-height: 38px; background: var(--accent); color: var(--accent-fg);
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: .48; cursor: default; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-mid); }
+    .btn-ghost:hover { background: #f8fafc; }
+    .btn-danger { background: var(--red-soft); color: var(--red); border-color: transparent; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { min-height: 31px; padding: 5px 9px; font-size: .78rem; }
+    .row-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+    .form { display: grid; gap: 10px; }
+    .field { display: grid; gap: 4px; }
+    label { font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
+    input, textarea, select {
+      width: 100%; border: 1.5px solid var(--border-mid); border-radius: 8px;
+      padding: 9px 11px; font: inherit; background: var(--surface); color: var(--text);
+    }
+    textarea { min-height: 64px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+    .empty, .loading { color: var(--muted); text-align: center; padding: 32px 16px; }
+    .error { background: var(--red-soft); color: var(--red); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .86rem; }
+    .notice { background: var(--green-soft); color: var(--green); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .86rem; }
+    .surprise {
+      background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; border: 0;
+      border-radius: var(--radius); padding: 16px; text-align: center; margin-bottom: 12px;
+    }
+    .surprise .surprise-title { font-weight: 800; font-size: 1.1rem; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,.45);
+      display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+    }
+    .modal { background: var(--surface); border-radius: 12px; padding: 18px; width: 100%; max-width: 440px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+    .grid.two { display: grid; gap: 10px; }
+    @media (min-width: 560px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+  </style>
+  <base href="/run/watchlist/">
+</head>
+<body>
+<div class="app">
+  <div id="root" class="loading">Loading…</div>
+</div>
+
+<script type="module">
+import { esc, initial, memberColor, hubConfirm } from "/hub-sdk.js";
+
+const CONTEXT = window.__CONTEXT_URL ?? "";
+const DB = window.__DB_URL ?? "";
+const HUB_MEMBER = window.__CURRENT_MEMBER ?? null;
+
+let members = [];
+let memberMap = new Map();
+let currentMember = null;
+let titles = [];
+let view = "unwatched";        // 'unwatched' | 'watched'
+let filterGenre = "";
+let filterMood = "";
+let error = "";
+let notice = "";
+let modalEl = null;
+
+function nowIso() { return new Date().toISOString(); }
+function uid() { return crypto.randomUUID(); }
+
+async function dbq(sql, params = []) {
+  if (!DB) return { rows: [] };
+  const res = await fetch(DB, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, params }),
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+async function loadMembers() {
+  if (!CONTEXT) {
+    members = [
+      { id: "demo-1", name: "Alex", role: "adult" },
+      { id: "demo-2", name: "Jordan", role: "adult" },
+      { id: "demo-3", name: "Casey", role: "child" },
+    ];
+  } else {
+    try {
+      const res = await fetch(`${CONTEXT}?keys=family.members`);
+      members = ((await res.json())["family.members"]) ?? [];
+    } catch { members = []; }
+  }
+  memberMap = new Map(members.map(m => [m.id, m]));
+  currentMember = HUB_MEMBER ?? members[0] ?? { id: "guest", name: "Guest", role: "adult" };
+}
+
+function seedDemo() {
+  titles = [
+    { id: "d1", title: "The Grand Budapest Hotel", kind: "movie", genre: "Comedy", mood: "Cozy", note: "Everyone said it's gorgeous.", status: "unwatched", rating: null, added_by_id: "demo-2", added_by_name: "Jordan", watched_by_name: "", watched_at: null, created_at: nowIso() },
+    { id: "d2", title: "Bluey", kind: "show", genre: "Family", mood: "Feel-good", note: "", status: "unwatched", rating: null, added_by_id: "demo-3", added_by_name: "Casey", watched_by_name: "", watched_at: null, created_at: nowIso() },
+    { id: "d3", title: "Spirited Away", kind: "movie", genre: "Animation", mood: "Adventurous", note: "", status: "watched", rating: 5, added_by_id: "demo-1", added_by_name: "Alex", watched_by_name: "Alex", watched_at: nowIso(), created_at: nowIso() },
+  ];
+}
+
+async function loadTitles() {
+  if (!DB) { seedDemo(); return; }
+  const rows = await dbq("SELECT * FROM app_watchlist__titles ORDER BY created_at DESC");
+  titles = rows.rows;
+}
+
+async function refresh() {
+  clearMessages();
+  try {
+    await Promise.all([loadMembers(), loadTitles()]);
+    render();
+  } catch (e) { error = e.message; render(); }
+}
+
+function clearMessages() { error = ""; notice = ""; }
+function showError(m) { error = m; notice = ""; render(); }
+function showNotice(m) { notice = m; error = ""; render(); }
+
+function genres() { return [...new Set(titles.map(t => (t.genre || "").trim()).filter(Boolean))].sort(); }
+function moods() { return [...new Set(titles.map(t => (t.mood || "").trim()).filter(Boolean))].sort(); }
+
+function visibleTitles() {
+  return titles.filter(t => {
+    if (t.status !== view) return false;
+    if (filterGenre && (t.genre || "").trim() !== filterGenre) return false;
+    if (filterMood && (t.mood || "").trim() !== filterMood) return false;
+    return true;
+  });
+}
+
+// ── mutations ────────────────────────────────────────────────────────────────
+async function addTitle(fields) {
+  const title = fields.title.trim();
+  if (!title) return showError("Give the title a name.");
+  const row = {
+    id: uid(), title, kind: fields.kind || "movie",
+    genre: fields.genre.trim(), mood: fields.mood.trim(), note: fields.note.trim(),
+    status: "unwatched", rating: null,
+    added_by_id: currentMember.id, added_by_name: currentMember.name,
+    watched_by_name: "", watched_at: null, created_at: nowIso(),
+  };
+  try {
+    if (DB) {
+      await dbq(
+        `INSERT INTO app_watchlist__titles
+         (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'unwatched', NULL, ?, ?, '', NULL, ?)`,
+        [row.id, row.title, row.kind, row.genre, row.mood, row.note, row.added_by_id, row.added_by_name, row.created_at]
+      );
+    }
+    titles = [row, ...titles];
+    closeModal();
+    showNotice(`Added “${row.title}”.`);
+  } catch (e) { showError(e.message); }
+}
+
+async function markWatched(id, rating) {
+  const idx = titles.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const watchedAt = nowIso();
+  try {
+    if (DB) {
+      await dbq(
+        `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ?`,
+        [rating, currentMember.name, watchedAt, id]
+      );
+    }
+    titles[idx] = { ...titles[idx], status: "watched", rating, watched_by_name: currentMember.name, watched_at: watchedAt };
+    closeModal();
+    showNotice("Marked as watched.");
+  } catch (e) { showError(e.message); }
+}
+
+async function markUnwatched(id) {
+  const idx = titles.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  try {
+    if (DB) await dbq(`UPDATE app_watchlist__titles SET status = 'unwatched', rating = NULL, watched_by_name = '', watched_at = NULL WHERE id = ?`, [id]);
+    titles[idx] = { ...titles[idx], status: "unwatched", rating: null, watched_by_name: "", watched_at: null };
+    showNotice("Moved back to the watchlist.");
+  } catch (e) { showError(e.message); }
+}
+
+async function removeTitle(id) {
+  const t = titles.find(x => x.id === id);
+  if (!t) return;
+  const ok = await hubConfirm({ message: `Remove “${t.title}”?`, confirmLabel: "Remove", destructive: true });
+  if (!ok) return;
+  try {
+    if (DB) await dbq(`DELETE FROM app_watchlist__titles WHERE id = ?`, [id]);
+    titles = titles.filter(x => x.id !== id);
+    showNotice("Removed.");
+  } catch (e) { showError(e.message); }
+}
+
+function surpriseMe() {
+  const pool = titles.filter(t => t.status === "unwatched");
+  if (!pool.length) return showError("Nothing left to watch — add some titles first!");
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  openModal(`
+    <h2>🎲 Tonight’s pick</h2>
+    <p class="surprise-title" style="font-size:1.15rem;font-weight:800;margin:8px 0 2px;">${esc(pick.title)}</p>
+    <p class="muted tiny">${esc(metaLine(pick))}</p>
+    ${pick.note ? `<p class="title-note">${esc(pick.note)}</p>` : ""}
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" data-close>Close</button>
+      <button class="btn" type="button" data-watch="${esc(pick.id)}">Watched it →</button>
+    </div>
+  `);
+}
+
+// ── modal ────────────────────────────────────────────────────────────────────
+function openModal(html) {
+  closeModal();
+  modalEl = document.createElement("div");
+  modalEl.className = "modal-backdrop";
+  modalEl.innerHTML = `<div class="modal">${html}</div>`;
+  modalEl.addEventListener("click", e => { if (e.target === modalEl) closeModal(); });
+  document.body.appendChild(modalEl);
+  const focusEl = modalEl.querySelector("[data-autofocus]");
+  if (focusEl) focusEl.focus();
+}
+function closeModal() { modalEl?.remove(); modalEl = null; }
+
+function openAddModal() {
+  openModal(`
+    <h2>Add to watchlist</h2>
+    <form class="form" id="add-form">
+      <div class="field">
+        <label for="f-title">Title</label>
+        <input id="f-title" name="title" data-autofocus placeholder="Movie or show name" required />
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label for="f-kind">Type</label>
+          <select id="f-kind" name="kind"><option value="movie">Movie</option><option value="show">Show</option></select>
+        </div>
+        <div class="field">
+          <label for="f-genre">Genre</label>
+          <input id="f-genre" name="genre" placeholder="Comedy, Sci-fi…" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-mood">Mood</label>
+        <input id="f-mood" name="mood" placeholder="Cozy, thrilling, feel-good…" />
+      </div>
+      <div class="field">
+        <label for="f-note">Why watch it?</label>
+        <textarea id="f-note" name="note" placeholder="Optional note"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+        <button class="btn" type="submit">Add title</button>
+      </div>
+    </form>
+  `);
+}
+
+function openWatchModal(id) {
+  const t = titles.find(x => x.id === id);
+  if (!t) return;
+  openModal(`
+    <h2>Rate “${esc(t.title)}”</h2>
+    <p class="muted tiny">How was it? (tap a star)</p>
+    <div id="rate-stars" style="font-size:2rem;letter-spacing:6px;cursor:pointer;color:#d97706;margin:8px 0;">
+      ${[1,2,3,4,5].map(n => `<span data-star="${n}">☆</span>`).join("")}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+      <button class="btn" type="button" id="save-rating" disabled data-id="${esc(t.id)}">Mark watched</button>
+    </div>
+  `);
+}
+
+// ── render ───────────────────────────────────────────────────────────────────
+function metaLine(t) {
+  const bits = [t.kind === "show" ? "Show" : "Movie"];
+  if (t.genre) bits.push(t.genre);
+  if (t.mood) bits.push(t.mood);
+  bits.push(`added by ${t.added_by_name}`);
+  return bits.join(" · ");
+}
+function stars(n) { return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+
+function renderMessages() {
+  return `${error ? `<div class="error">${esc(error)}</div>` : ""}${notice ? `<div class="notice">${esc(notice)}</div>` : ""}`;
+}
+
+function renderFilters() {
+  const g = genres(), m = moods();
+  if (!g.length && !m.length) return "";
+  return `
+    <div class="filters">
+      ${g.length ? `<button class="chip ${!filterGenre ? "active" : ""}" data-genre="">All genres</button>` : ""}
+      ${g.map(x => `<button class="chip ${filterGenre === x ? "active" : ""}" data-genre="${esc(x)}">${esc(x)}</button>`).join("")}
+    </div>
+    ${m.length ? `<div class="filters">
+      <button class="chip ${!filterMood ? "active" : ""}" data-mood="">Any mood</button>
+      ${m.map(x => `<button class="chip ${filterMood === x ? "active" : ""}" data-mood="${esc(x)}">${esc(x)}</button>`).join("")}
+    </div>` : ""}
+  `;
+}
+
+function renderTitle(t) {
+  const watched = t.status === "watched";
+  return `
+    <article class="card title-card">
+      <div>
+        <div class="title-name">${esc(t.title)} <span class="pill ${t.kind === "show" ? "info" : ""}">${t.kind === "show" ? "Show" : "Movie"}</span></div>
+        <div class="title-meta">${esc(metaLine(t))}</div>
+        ${watched && t.rating ? `<div class="title-meta"><span class="stars">${stars(t.rating)}</span> · watched by ${esc(t.watched_by_name || "someone")}</div>` : ""}
+        ${t.note ? `<div class="title-note">${esc(t.note)}</div>` : ""}
+      </div>
+      <div class="row-actions">
+        ${watched
+          ? `<button class="btn btn-ghost btn-sm" data-unwatch="${esc(t.id)}">Watch again</button>`
+          : `<button class="btn btn-sm" data-watch="${esc(t.id)}">Watched</button>`}
+        <button class="btn btn-danger btn-sm" data-remove="${esc(t.id)}">Remove</button>
+      </div>
+    </article>
+  `;
+}
+
+function render() {
+  const root = document.getElementById("root");
+  root.className = "app";
+  const list = visibleTitles();
+  const unwatchedCount = titles.filter(t => t.status === "unwatched").length;
+  root.innerHTML = `
+    <div class="topbar">
+      <div>
+        <h1>🍿 Family Watchlist</h1>
+        <p class="muted tiny">What should we watch together?</p>
+      </div>
+      <button class="btn" data-add>Add title</button>
+    </div>
+    ${renderMessages()}
+    ${unwatchedCount ? `<button class="surprise" data-surprise>
+      <div class="surprise-title">🎲 Surprise Me</div>
+      <div class="tiny" style="opacity:.85">Pick something at random from ${unwatchedCount} unwatched</div>
+    </button>` : ""}
+    <div class="tabs">
+      <button class="tab ${view === "unwatched" ? "active" : ""}" data-tab="unwatched">To watch</button>
+      <button class="tab ${view === "watched" ? "active" : ""}" data-tab="watched">Watched</button>
+    </div>
+    ${renderFilters()}
+    <section class="stack">
+      ${list.length ? list.map(renderTitle).join("") : `<div class="card empty">${view === "unwatched" ? "Nothing on the list yet — add a title." : "No watched titles yet."}</div>`}
+    </section>
+  `;
+}
+
+// ── events ───────────────────────────────────────────────────────────────────
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, [data-star]");
+  if (!t) return;
+  if (t.hasAttribute("data-star")) {
+    const n = Number(t.getAttribute("data-star"));
+    const box = document.getElementById("rate-stars");
+    if (box) {
+      box.dataset.value = String(n);
+      [...box.querySelectorAll("[data-star]")].forEach(s => { s.textContent = Number(s.getAttribute("data-star")) <= n ? "★" : "☆"; });
+    }
+    const save = document.getElementById("save-rating");
+    if (save) save.disabled = false;
+    return;
+  }
+  if (t.id === "save-rating") {
+    const box = document.getElementById("rate-stars");
+    const n = Number(box?.dataset.value || 0);
+    if (n) markWatched(t.getAttribute("data-id"), n);
+    return;
+  }
+  if (t.hasAttribute("data-close")) { closeModal(); return; }
+  if (t.hasAttribute("data-add")) { openAddModal(); return; }
+  if (t.hasAttribute("data-surprise")) { surpriseMe(); return; }
+  if (t.hasAttribute("data-tab")) { view = t.getAttribute("data-tab"); clearMessages(); render(); return; }
+  if (t.hasAttribute("data-genre")) { filterGenre = t.getAttribute("data-genre"); render(); return; }
+  if (t.hasAttribute("data-mood")) { filterMood = t.getAttribute("data-mood"); render(); return; }
+  if (t.hasAttribute("data-watch")) { openWatchModal(t.getAttribute("data-watch")); return; }
+  if (t.hasAttribute("data-unwatch")) { markUnwatched(t.getAttribute("data-unwatch")); return; }
+  if (t.hasAttribute("data-remove")) { removeTitle(t.getAttribute("data-remove")); return; }
+});
+
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "add-form") return;
+  e.preventDefault();
+  const btn = e.target.querySelector(".modal-actions .btn:not(.btn-ghost)");
+  const val = (id) => document.getElementById(id)?.value ?? "";
+  if (btn) { btn.disabled = true; btn.textContent = "Adding…"; }
+  addTitle({
+    title: val("f-title"), kind: val("f-kind"), genre: val("f-genre"),
+    mood: val("f-mood"), note: val("f-note"),
+  }).catch(() => { if (btn) { btn.disabled = false; btn.textContent = "Add title"; } });
+});
+
+refresh();
+</script>
+</body>
+</html>
