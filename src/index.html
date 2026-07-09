@@ -113,6 +113,10 @@
 
 <script type="module">
 import { esc, initial, memberColor, hubConfirm } from "/hub-sdk.js";
+import {
+  genres as genresOf, moods as moodsOf, visibleTitles as visibleTitlesOf,
+  unwatchedPool, metaLine, stars,
+} from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
 const DB = window.__DB_URL ?? "";
@@ -187,17 +191,9 @@ function clearMessages() { error = ""; notice = ""; }
 function showError(m) { error = m; notice = ""; render(); }
 function showNotice(m) { notice = m; error = ""; render(); }
 
-function genres() { return [...new Set(titles.map(t => (t.genre || "").trim()).filter(Boolean))].sort(); }
-function moods() { return [...new Set(titles.map(t => (t.mood || "").trim()).filter(Boolean))].sort(); }
-
-function visibleTitles() {
-  return titles.filter(t => {
-    if (t.status !== view) return false;
-    if (filterGenre && (t.genre || "").trim() !== filterGenre) return false;
-    if (filterMood && (t.mood || "").trim() !== filterMood) return false;
-    return true;
-  });
-}
+function genres() { return genresOf(titles); }
+function moods() { return moodsOf(titles); }
+function visibleTitles() { return visibleTitlesOf(titles, view, filterGenre, filterMood); }
 
 // ── mutations ────────────────────────────────────────────────────────────────
 async function addTitle(fields) {
@@ -265,7 +261,7 @@ async function removeTitle(id) {
 }
 
 function surpriseMe() {
-  const pool = titles.filter(t => t.status === "unwatched");
+  const pool = unwatchedPool(titles);
   if (!pool.length) return showError("Nothing left to watch — add some titles first!");
   const pick = pool[Math.floor(Math.random() * pool.length)];
   openModal(`
@@ -344,14 +340,6 @@ function openWatchModal(id) {
 }
 
 // ── render ───────────────────────────────────────────────────────────────────
-function metaLine(t) {
-  const bits = [t.kind === "show" ? "Show" : "Movie"];
-  if (t.genre) bits.push(t.genre);
-  if (t.mood) bits.push(t.mood);
-  bits.push(`added by ${t.added_by_name}`);
-  return bits.join(" · ");
-}
-function stars(n) { return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
 
 function renderMessages() {
   return `${error ? `<div class="error">${esc(error)}</div>` : ""}${notice ? `<div class="notice">${esc(notice)}</div>` : ""}`;
