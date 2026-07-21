@@ -9,6 +9,7 @@
   "category": "entertainment",
   "tags": ["movies", "shows", "watchlist", "entertainment", "family"],
   "storage": "db",
+  "contexts": ["household", "shared_space"],
   "data_access": {
     "reads": ["family.members"],
     "writes": []
