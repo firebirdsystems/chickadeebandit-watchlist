@@ -18,6 +18,23 @@
     "default_audience": "everyone",
     "requires_approval": false
   },
+  "member_references": {
+    "titles": {
+      "column": "added_by_id",
+      "on_removed": "keep"
+    }
+  },
+  "retention": {
+    "titles": {
+      "default": 730,
+      "timestamp_column": "created_at",
+      "override_key": "watched_titles",
+      "exempt_when": {
+        "column": "status",
+        "values": ["unwatched"]
+      }
+    }
+  },
   "nav": { "label": "Watchlist" },
   "glance": {
     "source": {
