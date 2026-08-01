@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars } from "../src/logic.js";
+import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars, searchableFields } from "../src/logic.js";
 
 const TITLES = [
   { id: "1", status: "unwatched", genre: "Comedy", mood: "Cozy", kind: "movie", added_by_name: "Al" },
@@ -46,5 +46,16 @@ describe("stars", () => {
     expect(stars(3)).toBe("★★★☆☆");
     expect(stars(0)).toBe("☆☆☆☆☆");
     expect(stars(5)).toBe("★★★★★");
+  });
+});
+
+describe("searchableFields", () => {
+  it("matches on genre and mood, which is how a watchlist is actually browsed", () => {
+    const fields = searchableFields({
+      title: "The Grand Budapest Hotel", genre: "comedy", mood: "light",
+      note: "Sam picked it", kind: "film", added_by_name: "Sam",
+    });
+    expect(fields).toContain("comedy");
+    expect(fields).toContain("light");
   });
 });
