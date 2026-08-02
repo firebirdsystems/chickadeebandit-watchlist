@@ -9,6 +9,43 @@
   "category": "entertainment",
   "tags": ["movies", "shows", "watchlist", "entertainment", "family"],
   "storage": "db",
+  "automation_actions": {
+    "add_title": {
+      "title": "Add a title to the watchlist",
+      "description": "Queue up a movie or show when another app's event fires - a recommendation posted to the forum, a reward earned, a trip planned.",
+      "params": {
+        "added_by_id": { "type": "member", "label": "Added by", "required": true },
+        "title": { "type": "text", "label": "Title", "required": true },
+        "kind": { "type": "text", "label": "Movie or show", "default": "movie", "options": ["movie", "show"] },
+        "genre": { "type": "text", "label": "Genre", "default": "" },
+        "note": { "type": "text", "label": "Note", "default": "" }
+      },
+      "dedupe": { "table": "titles", "column": "source_event_id" },
+      "steps": [
+        {
+          "op": "insert",
+          "table": "titles",
+          "values": {
+            "id": "$uuid",
+            "title": ":title",
+            "kind": ":kind",
+            "genre": ":genre",
+            "note": ":note",
+            "status": "unwatched",
+            "added_by_id": ":added_by_id",
+            "added_by_name": "Automation",
+            "created_at": "$now",
+            "source_event_id": "$event_id"
+          }
+        }
+      ]
+    }
+  },
+  "publishes": ["watchlist.title_added", "watchlist.title_watched"],
+  "publish_acls": {
+    "watchlist.title_added": { "require_role": "member" },
+    "watchlist.title_watched": { "require_role": "member" }
+  },
   "contexts": ["household", "shared_space"],
   "data_access": {
     "reads": ["family.members"],
