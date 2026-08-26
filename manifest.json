@@ -9,6 +9,9 @@
   "category": "entertainment",
   "tags": ["movies", "shows", "watchlist", "entertainment", "family"],
   "storage": "db",
+  "preload": {
+    "titles": {"sql": "SELECT * FROM app_watchlist__titles ORDER BY created_at DESC"}
+  },
   "automation_actions": {
     "add_title": {
       "title": "Add a title to the watchlist",
