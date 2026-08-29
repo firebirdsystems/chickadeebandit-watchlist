@@ -1,7 +1,7 @@
 {
   "id": "watchlist",
   "name": "Family Watchlist",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A shared list of movies and shows the household wants to watch together. Add titles, mark them watched with a rating, filter by genre or mood, or tap Surprise Me for a random pick.",
   "entrypoint": "index.html",
   "runtime": "static",
@@ -58,6 +58,7 @@
     "default_audience": "everyone",
     "requires_approval": false
   },
+  "db_plaintext_columns": ["kind"],
   "member_references": {
     "titles": {
       "column": "added_by_id",
