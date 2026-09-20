@@ -1,5 +1,7 @@
 # Family Watchlist
 
+A [Chickadee Bandit](https://chickadeebandit.com/app-library/watchlist) app.
+
 A shared list of movies and shows the household wants to watch together. Any member can add titles with a note about why, mark them watched with a 1–5 star rating, filter by genre or mood, or tap **Surprise Me** for a random pick from the unwatched list.
 
 The Letterboxd/JustWatch use case, scoped to the family.
