@@ -1,0 +1,63 @@
+{
+  "scenarios": [
+    {
+      "name": "the watchlist is household-shared: another member can mark a title watched with a rating",
+      "members": { "adder": "adult", "watcher": "adult" },
+      "steps": [
+        {
+          "action": "db",
+          "as": "adder",
+          "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, status, added_by_id, added_by_name, created_at) VALUES (?, ?, 'movie', 'Animation', 'unwatched', ?, 'Adder', '2026-01-01T00:00:00Z')",
+          "params": ["t1", "Spirited Away", "{{adder}}"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "watcher",
+          "sql": "UPDATE app_watchlist__titles SET status = 'watched', rating = 5, watched_by_name = 'Watcher', watched_at = '2026-01-03T00:00:00Z' WHERE id = 't1'",
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "adder",
+          "sql": "SELECT id, title, status, rating FROM app_watchlist__titles",
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "t1", "title": "Spirited Away", "status": "watched", "rating": 5 }] }
+        }
+      ]
+    },
+    {
+      "name": "unwatched_titles and watched_ratings split the list by status",
+      "members": { "member": "adult" },
+      "steps": [
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_watchlist__titles (id, title, kind, status, added_by_id, added_by_name, created_at) VALUES (?, 'Paddington 2', 'movie', 'unwatched', ?, 'Member', '2026-01-01T00:00:00Z')",
+          "params": ["t_un", "{{member}}"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "db",
+          "as": "member",
+          "sql": "INSERT INTO app_watchlist__titles (id, title, kind, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, 'Bluey', 'show', 'watched', 4, ?, 'Member', 'Member', '2026-01-02T00:00:00Z', '2026-01-01T00:00:00Z')",
+          "params": ["t_w", "{{member}}"],
+          "expect": { "status": 200 }
+        },
+        {
+          "action": "named",
+          "as": "member",
+          "kind": "query",
+          "name": "unwatched_titles",
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "t_un", "title": "Paddington 2" }] }
+        },
+        {
+          "action": "named",
+          "as": "member",
+          "kind": "query",
+          "name": "watched_ratings",
+          "expect": { "status": 200, "rowCount": 1, "rowsContain": [{ "id": "t_w", "kind": "show", "rating": 4 }] }
+        }
+      ]
+    }
+  ]
+}
