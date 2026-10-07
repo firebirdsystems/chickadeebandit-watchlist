@@ -119,7 +119,7 @@
 </div>
 
 <script type="module">
-import { esc, initial, memberColor, hubConfirm, searchMatch } from "/hub-sdk.js";
+import { esc, initial, memberColor, hubConfirm, searchMatch, glyph } from "/hub-sdk.js";
 import {
   genres as genresOf, moods as moodsOf, visibleTitles as visibleTitlesOf,
   unwatchedPool, metaLine, stars, searchableFields,
@@ -302,7 +302,7 @@ function surpriseMe() {
   if (!pool.length) return showError("Nothing left to watch — add some titles first!");
   const pick = pool[Math.floor(Math.random() * pool.length)];
   openModal(`
-    <h2>🎲 Tonight’s pick</h2>
+    <h2>${glyph("dice")} Tonight’s pick</h2>
     <p class="surprise-title" style="font-size:1.15rem;font-weight:800;margin:8px 0 2px;">${esc(pick.title)}</p>
     <p class="muted tiny">${esc(metaLine(pick))}</p>
     ${pick.note ? `<p class="title-note">${esc(pick.note)}</p>` : ""}
@@ -435,14 +435,14 @@ function render() {
   root.innerHTML = `
     <div class="topbar">
       <div>
-        <h1>🍿 Family Watchlist</h1>
+        <h1>${glyph("film")} Family Watchlist</h1>
         <p class="muted tiny">What should we watch together?</p>
       </div>
       <button class="btn" data-add>Add title</button>
     </div>
     ${renderMessages()}
     ${unwatchedCount ? `<button class="surprise" data-surprise>
-      <div class="surprise-title">🎲 Surprise Me</div>
+      <div class="surprise-title">${glyph("dice", { accent: "currentColor" })} Surprise Me</div>
       <div class="tiny" style="opacity:.85">Pick something at random from ${unwatchedCount} unwatched</div>
     </button>` : ""}
     <div class="tabs">
