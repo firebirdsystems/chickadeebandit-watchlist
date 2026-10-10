@@ -1,0 +1,418 @@
+{
+ "seed": [
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-33 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-40 days'))",
+   "params": [
+    "wl-1",
+    "The Grand Budapest Hotel",
+    "movie",
+    "Comedy",
+    "Cozy",
+    "Everyone said it's gorgeous.",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-39 days'))",
+   "params": [
+    "wl-2",
+    "Bluey",
+    "show",
+    "Family",
+    "Feel-good",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-28 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-38 days'))",
+   "params": [
+    "wl-3",
+    "Spirited Away",
+    "movie",
+    "Animation",
+    "Adventurous",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-36 days'))",
+   "params": [
+    "wl-4",
+    "Severance",
+    "show",
+    "Sci-fi",
+    "Tense",
+    "Season two is out.",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-35 days'))",
+   "params": [
+    "wl-5",
+    "Paddington 2",
+    "movie",
+    "Family",
+    "Feel-good",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-34 days'))",
+   "params": [
+    "wl-6",
+    "The Bear",
+    "show",
+    "Drama",
+    "Tense",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-22 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-32 days'))",
+   "params": [
+    "wl-7",
+    "Knives Out",
+    "movie",
+    "Mystery",
+    "Fun",
+    "Good for a rainy Saturday.",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-30 days'))",
+   "params": [
+    "wl-8",
+    "Arrival",
+    "movie",
+    "Sci-fi",
+    "Thoughtful",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-29 days'))",
+   "params": [
+    "wl-9",
+    "Abbott Elementary",
+    "show",
+    "Comedy",
+    "Feel-good",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-18 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-27 days'))",
+   "params": [
+    "wl-10",
+    "My Neighbor Totoro",
+    "movie",
+    "Animation",
+    "Cozy",
+    "For movie night with the kids.",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-15 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-26 days'))",
+   "params": [
+    "wl-11",
+    "The Martian",
+    "movie",
+    "Sci-fi",
+    "Adventurous",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-24 days'))",
+   "params": [
+    "wl-12",
+    "Only Murders in the Building",
+    "show",
+    "Mystery",
+    "Fun",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-23 days'))",
+   "params": [
+    "wl-13",
+    "Little Women",
+    "movie",
+    "Drama",
+    "Cozy",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-21 days'))",
+   "params": [
+    "wl-14",
+    "Planet Earth III",
+    "show",
+    "Documentary",
+    "Thoughtful",
+    "Watch on the big screen.",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-20 days'))",
+   "params": [
+    "wl-15",
+    "The Princess Bride",
+    "movie",
+    "Adventure",
+    "Fun",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-18 days'))",
+   "params": [
+    "wl-16",
+    "Ted Lasso",
+    "show",
+    "Comedy",
+    "Feel-good",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-17 days'))",
+   "params": [
+    "wl-17",
+    "Dune",
+    "movie",
+    "Sci-fi",
+    "Epic",
+    "Part one first.",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 5, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-15 days'))",
+   "params": [
+    "wl-18",
+    "Coco",
+    "movie",
+    "Animation",
+    "Feel-good",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-14 days'))",
+   "params": [
+    "wl-19",
+    "Slow Horses",
+    "show",
+    "Thriller",
+    "Tense",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-12 days'))",
+   "params": [
+    "wl-20",
+    "The Great British Baking Show",
+    "show",
+    "Reality",
+    "Cozy",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-11 days'))",
+   "params": [
+    "wl-21",
+    "Hidden Figures",
+    "movie",
+    "Drama",
+    "Thoughtful",
+    "School recommended it.",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-10 days'))",
+   "params": [
+    "wl-22",
+    "Shaun the Sheep Movie",
+    "movie",
+    "Family",
+    "Fun",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-9 days'))",
+   "params": [
+    "wl-23",
+    "Free Solo",
+    "movie",
+    "Documentary",
+    "Tense",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-8 days'))",
+   "params": [
+    "wl-24",
+    "Avatar: The Last Airbender",
+    "show",
+    "Animation",
+    "Adventurous",
+    "The animated original.",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-6 days'))",
+   "params": [
+    "wl-25",
+    "Chef's Table",
+    "show",
+    "Documentary",
+    "Thoughtful",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-5 days'))",
+   "params": [
+    "wl-26",
+    "The Secret Life of Walter Mitty",
+    "movie",
+    "Adventure",
+    "Feel-good",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at) VALUES (?, ?, ?, ?, ?, ?, 4, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 days'), strftime('%Y-%m-%dT%H:%M:%fZ','now','-4 days'))",
+   "params": [
+    "wl-27",
+    "Wallace and Gromit: Vengeance Most Fowl",
+    "movie",
+    "Animation",
+    "Fun",
+    "watched",
+    "{{me}}",
+    "Alex",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-3 days'))",
+   "params": [
+    "wl-28",
+    "Shogun",
+    "show",
+    "Drama",
+    "Epic",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-2 days'))",
+   "params": [
+    "wl-29",
+    "Inside Out 2",
+    "movie",
+    "Animation",
+    "Feel-good",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  },
+  {
+   "sql": "INSERT INTO app_watchlist__titles (id, title, kind, genre, mood, note, status, added_by_id, added_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now','-1 days'))",
+   "params": [
+    "wl-30",
+    "The Wild Robot",
+    "movie",
+    "Family",
+    "Cozy",
+    "Friday movie night pick.",
+    "unwatched",
+    "{{me}}",
+    "Alex"
+   ]
+  }
+ ]
+}
