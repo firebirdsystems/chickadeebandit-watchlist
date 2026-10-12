@@ -110,6 +110,8 @@
       background: var(--surface, var(--card, #fff)); color: var(--text, inherit);
     }
     .search-input:focus { outline: none; border-color: var(--accent, #6366f1); }
+    .load-error { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--hub-tint-danger, #fee2e2); color: var(--hub-tint-danger-fg, #b91c1c); font-size: 0.9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .load-error-retry { background: none; border: 1px solid currentColor; border-radius: 8px; padding: 5px 10px; font: inherit; font-weight: 600; color: inherit; cursor: pointer; flex-shrink: 0; }
   </style>
   <base href="/run/watchlist/">
 </head>
@@ -154,6 +156,7 @@ let searchQ = "";       // in-app search (see logic.js searchableFields)
 let filterGenre = "";
 let filterMood = "";
 let error = "";
+let loadFailed = false;
 let notice = "";
 let modalEl = null;
 
@@ -167,8 +170,8 @@ async function dbq(sql, params = []) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sql, params }),
   });
-  const json = await res.json();
-  if (json.error) throw new Error(json.error);
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
   return json;
 }
 
@@ -180,10 +183,10 @@ async function loadMembers() {
       { id: "demo-3", name: "Casey", role: "child" },
     ];
   } else {
-    try {
-      const res = await fetch(`${CONTEXT}?keys=family.members`);
-      members = ((await res.json())["family.members"]) ?? [];
-    } catch { members = []; }
+    const res = await fetch(`${CONTEXT}?keys=family.members`);
+    const ctx = await res.json().catch(() => null);
+    if (!res.ok || !ctx || typeof ctx !== "object" || ctx.$errors?.length) throw new Error("Couldn’t reach the hub. Try again.");
+    members = ctx["family.members"] ?? [];
   }
   memberMap = new Map(members.map(m => [m.id, m]));
   currentMember = HUB_MEMBER ?? members[0] ?? { id: "guest", name: "Guest", role: "adult" };
@@ -207,12 +210,22 @@ async function refresh() {
   clearMessages();
   try {
     await Promise.all([loadMembers(), loadTitles()]);
+    loadFailed = false;
     render();
-  } catch (e) { error = e.message; render(); }
+  } catch { loadFailed = true; render(); }
 }
 
 function clearMessages() { error = ""; notice = ""; }
-function showError(m) { error = m; notice = ""; render(); }
+// An open dialog covers the page banner, so the message goes inside the dialog.
+function showModalError(m) {
+  const box = modalEl?.querySelector(".modal");
+  if (!box) return false;
+  let el = box.querySelector(".error");
+  if (!el) { el = document.createElement("div"); el.className = "error"; el.setAttribute("role", "alert"); box.prepend(el); }
+  el.textContent = m;
+  return true;
+}
+function showError(m) { if (showModalError(m)) return; error = m; notice = ""; render(); }
 function showNotice(m) { notice = m; error = ""; render(); }
 
 function genres() { return genresOf(titles); }
@@ -379,6 +392,7 @@ function openWatchModal(id) {
 // ── render ───────────────────────────────────────────────────────────────────
 
 function renderMessages() {
+  if (loadFailed) return `<div class="load-error" data-testid="load-error" role="alert"><span>Couldn’t load the watchlist.</span> <button type="button" class="load-error-retry" data-testid="load-retry">Try again</button></div>`;
   return `${error ? `<div class="error">${esc(error)}</div>` : ""}${notice ? `<div class="notice">${esc(notice)}</div>` : ""}`;
 }
 
@@ -423,6 +437,7 @@ function renderTitleList() {
   const list = visibleTitles();
   const shown = searchQ ? list.filter(t => searchMatch(searchQ, searchableFields(t))) : list;
   if (shown.length) return shown.map(renderTitle).join("");
+  if (loadFailed) return "";
   if (searchQ) return `<div class="card empty">No titles match "${esc(searchQ)}".</div>`;
   return `<div class="card empty">${view === "unwatched" ? "Nothing on the list yet — add a title." : "No watched titles yet."}</div>`;
 }
@@ -438,7 +453,7 @@ function render() {
         <h1>${glyph("film")} Family Watchlist</h1>
         <p class="muted tiny">What should we watch together?</p>
       </div>
-      <button class="btn" data-add>Add title</button>
+      ${loadFailed ? "" : `<button class="btn" data-add>Add title</button>`}
     </div>
     ${renderMessages()}
     ${unwatchedCount ? `<button class="surprise" data-surprise>
@@ -488,6 +503,7 @@ document.addEventListener("click", (e) => {
   }
   if (t.hasAttribute("data-close")) { closeModal(); return; }
   if (t.hasAttribute("data-add")) { openAddModal(); return; }
+  if (t.dataset.testid === "load-retry") { refresh(); return; }
   if (t.hasAttribute("data-surprise")) { surpriseMe(); return; }
   if (t.hasAttribute("data-tab")) { view = t.getAttribute("data-tab"); clearMessages(); render(); return; }
   if (t.hasAttribute("data-genre")) { filterGenre = t.getAttribute("data-genre"); render(); return; }
@@ -506,7 +522,7 @@ document.addEventListener("submit", (e) => {
   addTitle({
     title: val("f-title"), kind: val("f-kind"), genre: val("f-genre"),
     mood: val("f-mood"), note: val("f-note"),
-  }).catch(() => { if (btn) { btn.disabled = false; btn.textContent = "Add title"; } });
+  }).finally(() => { if (btn) { btn.disabled = false; btn.textContent = "Add title"; } });
 });
 
 refresh();
