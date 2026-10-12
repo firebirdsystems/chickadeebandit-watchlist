@@ -261,7 +261,7 @@ async function addTitle(fields) {
     });
     closeModal();
     showNotice(`Added “${row.title}”.`);
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t add the title — try again."); }
 }
 
 async function markWatched(id, rating) {
@@ -285,7 +285,7 @@ async function markWatched(id, rating) {
     });
     closeModal();
     showNotice("Marked as watched.");
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t mark the title as watched — try again."); }
 }
 
 async function markUnwatched(id) {
@@ -295,7 +295,7 @@ async function markUnwatched(id) {
     if (DB) await dbq(`UPDATE app_watchlist__titles SET status = 'unwatched', rating = NULL, watched_by_name = '', watched_at = NULL WHERE id = ?`, [id]);
     titles[idx] = { ...titles[idx], status: "unwatched", rating: null, watched_by_name: "", watched_at: null };
     showNotice("Moved back to the watchlist.");
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t move the title back — try again."); }
 }
 
 async function removeTitle(id) {
@@ -307,7 +307,7 @@ async function removeTitle(id) {
     if (DB) await dbq(`DELETE FROM app_watchlist__titles WHERE id = ?`, [id]);
     titles = titles.filter(x => x.id !== id);
     showNotice("Removed.");
-  } catch (e) { showError(e.message); }
+  } catch (e) { console.error(e); showError("Couldn’t remove the title — try again."); }
 }
 
 function surpriseMe() {
