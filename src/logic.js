@@ -42,3 +42,12 @@ export function stars(n) {
 export function searchableFields(item) {
   return [item.title, item.genre, item.mood, item.note, item.kind, item.added_by_name];
 }
+
+/**
+ * Whether an UPDATE or DELETE that RAN touched a row. The hub answers a write
+ * it narrowed, or one whose row is already gone, with a 200 and `changed: 0`,
+ * so the request helper cannot throw for it.
+ */
+export function changedARow(res) {
+  return res?.changed !== 0;
+}

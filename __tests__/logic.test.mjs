@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars, searchableFields } from "../src/logic.js";
+import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars, searchableFields, changedARow } from "../src/logic.js";
 
 const TITLES = [
   { id: "1", status: "unwatched", genre: "Comedy", mood: "Cozy", kind: "movie", added_by_name: "Al" },
@@ -57,5 +57,15 @@ describe("searchableFields", () => {
     });
     expect(fields).toContain("comedy");
     expect(fields).toContain("light");
+  });
+});
+
+describe("changedARow", () => {
+  it("accepts a write that touched its row", () => {
+    expect(changedARow({ rows: [], changed: 1 })).toBe(true);
+  });
+  // The hub answers a write it narrowed, or one whose row is gone, with a 200.
+  it("rejects a write that matched nothing", () => {
+    expect(changedARow({ rows: [], changed: 0 })).toBe(false);
   });
 });

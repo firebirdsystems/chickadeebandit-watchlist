@@ -124,7 +124,7 @@
 import { esc, initial, memberColor, hubConfirm, searchMatch, glyph } from "/hub-sdk.js";
 import {
   genres as genresOf, moods as moodsOf, visibleTitles as visibleTitlesOf,
-  unwatchedPool, metaLine, stars, searchableFields,
+  unwatchedPool, metaLine, stars, searchableFields, changedARow,
 } from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
@@ -233,6 +233,16 @@ function moods() { return moodsOf(titles); }
 function visibleTitles() { return visibleTitlesOf(titles, view, filterGenre, filterMood); }
 
 // ── mutations ────────────────────────────────────────────────────────────────
+// A write that changed no row (see changedARow): nothing was saved, so show
+// what is stored. Returns the titles as stored, or null when the re-read failed.
+async function rereadTitles() {
+  try { await loadTitles(); return titles; } catch (e) { console.error(e); return null; }
+}
+// The line for an update that changed no row: the title is gone, or the write was refused.
+function unsavedText(stored, id, line) {
+  return stored && !stored.some(x => x.id === id) ? "That title was already removed." : line;
+}
+
 async function addTitle(fields) {
   const title = fields.title.trim();
   if (!title) return showError("Give the title a name.");
@@ -265,22 +275,29 @@ async function addTitle(fields) {
 }
 
 async function markWatched(id, rating) {
-  const idx = titles.findIndex(t => t.id === id);
-  if (idx === -1) return;
+  const t = titles.find(x => x.id === id);
+  if (!t) return;
   const watchedAt = nowIso();
   try {
     if (DB) {
-      await dbq(
+      const res = await dbq(
         `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ?`,
         [rating, currentMember.name, watchedAt, id]
       );
+      if (!changedARow(res)) {
+        const stored = await rereadTitles();
+        // Gone: nothing left to rate. Otherwise the dialog stays, as on a thrown failure.
+        if (stored && !stored.some(x => x.id === id)) closeModal(); else if (stored) render();
+        return showError(unsavedText(stored, id, "Couldn’t mark the title as watched — try again."));
+      }
     }
-    titles[idx] = { ...titles[idx], status: "watched", rating, watched_by_name: currentMember.name, watched_at: watchedAt };
+    // By id: a re-read in another handler may have replaced the list meanwhile.
+    titles = titles.map(x => x.id === id ? { ...x, status: "watched", rating, watched_by_name: currentMember.name, watched_at: watchedAt } : x);
     // Only the unwatched -> watched crossing. markUnwatched() is a correction,
     // not a second viewing, so it publishes nothing.
     await publishEvent("watchlist.title_watched", id, {
-      title: titles[idx].title,
-      kind: titles[idx].kind,
+      title: t.title,
+      kind: t.kind,
       rating,
     });
     closeModal();
@@ -289,11 +306,16 @@ async function markWatched(id, rating) {
 }
 
 async function markUnwatched(id) {
-  const idx = titles.findIndex(t => t.id === id);
-  if (idx === -1) return;
+  if (!titles.some(t => t.id === id)) return;
   try {
-    if (DB) await dbq(`UPDATE app_watchlist__titles SET status = 'unwatched', rating = NULL, watched_by_name = '', watched_at = NULL WHERE id = ?`, [id]);
-    titles[idx] = { ...titles[idx], status: "unwatched", rating: null, watched_by_name: "", watched_at: null };
+    if (DB) {
+      const res = await dbq(`UPDATE app_watchlist__titles SET status = 'unwatched', rating = NULL, watched_by_name = '', watched_at = NULL WHERE id = ?`, [id]);
+      if (!changedARow(res)) {
+        const stored = await rereadTitles();
+        return showError(unsavedText(stored, id, "Couldn’t move the title back — try again."));
+      }
+    }
+    titles = titles.map(x => x.id === id ? { ...x, status: "unwatched", rating: null, watched_by_name: "", watched_at: null } : x);
     showNotice("Moved back to the watchlist.");
   } catch (e) { console.error(e); showError("Couldn’t move the title back — try again."); }
 }
@@ -304,7 +326,14 @@ async function removeTitle(id) {
   const ok = await hubConfirm({ message: `Remove “${t.title}”?`, confirmLabel: "Remove", destructive: true });
   if (!ok) return;
   try {
-    if (DB) await dbq(`DELETE FROM app_watchlist__titles WHERE id = ?`, [id]);
+    if (DB) {
+      const res = await dbq(`DELETE FROM app_watchlist__titles WHERE id = ?`, [id]);
+      // Nothing deleted: already gone is what was asked for; still stored is a refusal.
+      if (!changedARow(res)) {
+        const stored = await rereadTitles();
+        if (!stored || stored.some(x => x.id === id)) return showError("Couldn’t remove the title — try again.");
+      }
+    }
     titles = titles.filter(x => x.id !== id);
     showNotice("Removed.");
   } catch (e) { console.error(e); showError("Couldn’t remove the title — try again."); }
