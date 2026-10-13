@@ -274,20 +274,24 @@ async function addTitle(fields) {
   } catch (e) { console.error(e); showError("Couldn’t add the title — try again."); }
 }
 
+const markingWatched = new Set(); // ids with a mark in flight: a second tap is a second UPDATE and event
 async function markWatched(id, rating) {
   const t = titles.find(x => x.id === id);
-  if (!t) return;
+  if (!t || markingWatched.has(id)) return;
+  markingWatched.add(id);
   const watchedAt = nowIso();
   try {
     if (DB) {
       const res = await dbq(
-        `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ?`,
+        `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ? AND status = 'unwatched'`,
         [rating, currentMember.name, watchedAt, id]
       );
       if (!changedARow(res)) {
         const stored = await rereadTitles();
-        // Gone: nothing left to rate. Otherwise the dialog stays, as on a thrown failure.
-        if (stored && !stored.some(x => x.id === id)) closeModal(); else if (stored) render();
+        // Gone or already watched: nothing left to rate. Otherwise the dialog stays, as on a thrown failure.
+        const now = stored?.find(x => x.id === id);
+        if (stored && now?.status !== "unwatched") closeModal(); else if (stored) render();
+        if (now && now.status !== "unwatched") return showError("That title was already marked as watched.");
         return showError(unsavedText(stored, id, "Couldn’t mark the title as watched — try again."));
       }
     }
@@ -303,6 +307,7 @@ async function markWatched(id, rating) {
     closeModal();
     showNotice("Marked as watched.");
   } catch (e) { console.error(e); showError("Couldn’t mark the title as watched — try again."); }
+  finally { markingWatched.delete(id); }
 }
 
 async function markUnwatched(id) {
