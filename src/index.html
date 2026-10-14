@@ -252,7 +252,8 @@ const REMOVE = { action: "remove the title", thing: "title" };
 // A write whose answer was lost may have landed: it is looked up by the id or
 // stamp the dialog kept. undefined: it is not there, or could not be read.
 async function storedTitle(id) {
-  try { return (await dbq(`SELECT * FROM app_watchlist__titles WHERE id = ?`, [id])).rows?.[0]; }
+  // The row, null when it is not there, undefined when the read failed.
+  try { return (await dbq(`SELECT * FROM app_watchlist__titles WHERE id = ?`, [id])).rows?.[0] ?? null; }
   catch (e) { console.error(e); return undefined; }
 }
 const SAVED_AS_FIRST = "Saved as first entered — check it and update what changed.";
@@ -280,8 +281,11 @@ async function addTitle(fields, form) {
       );
     } catch (e) {
       console.error(e);
-      const stored = outcomeUnknown(e) ? await storedTitle(row.id) : undefined;
-      if (!stored) return showError(failureLine(e, ADD));
+      const unknown = outcomeUnknown(e);
+      const stored = unknown ? await storedTitle(row.id) : undefined;
+      // The id is ours: with the read-back failed, a UNIQUE answer may be this
+      // form's own first try, so nothing is known — "try again", not "already exists".
+      if (!stored) return showError(failureLine(unknown && stored === undefined ? null : e, ADD));
       // It landed on an earlier press. There is no edit, so a form changed
       // since then shows the stored title and says so.
       if (storedDiffers(stored, { title: row.title, kind: row.kind, genre: row.genre, mood: row.mood, note: row.note })) note = SAVED_AS_FIRST;
