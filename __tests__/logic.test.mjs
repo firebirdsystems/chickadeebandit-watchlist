@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars, searchableFields, changedARow } from "../src/logic.js";
+import { genres, moods, visibleTitles, unwatchedPool, metaLine, stars, searchableFields, changedARow, outcomeUnknown, storedDiffers, failureLine } from "../src/logic.js";
 
 const TITLES = [
   { id: "1", status: "unwatched", genre: "Comedy", mood: "Cozy", kind: "movie", added_by_name: "Al" },
@@ -67,5 +67,51 @@ describe("changedARow", () => {
   // The hub answers a write it narrowed, or one whose row is gone, with a 200.
   it("rejects a write that matched nothing", () => {
     expect(changedARow({ rows: [], changed: 0 })).toBe(false);
+  });
+});
+
+describe("outcomeUnknown", () => {
+  it("is true when the answer may have been lost", () => {
+    expect(outcomeUnknown(new Error("Failed to fetch"))).toBe(true);
+    for (const status of [400, 500, 502, 503]) expect(outcomeUnknown({ status })).toBe(true);
+  });
+  it("is false for a clean refusal", () => {
+    for (const status of [403, 409, 507]) expect(outcomeUnknown({ status })).toBe(false);
+  });
+});
+
+describe("failureLine", () => {
+  const ctx = { action: "add the title", thing: "title" };
+  it("names a duplicate by code, or by the hub's text where production lags", () => {
+    expect(failureLine({ status: 400, code: "UNIQUE_CONSTRAINT" }, ctx)).toBe("That title already exists.");
+    expect(failureLine(Object.assign(new Error("UNIQUE constraint failed: x.id"), { status: 400 }), ctx)).toBe("That title already exists.");
+  });
+  it("names a refusal without asking to retry", () => {
+    expect(failureLine({ status: 403 }, ctx)).toBe("You don’t have permission to add the title.");
+    expect(failureLine({ status: 507 }, ctx)).toBe("The household’s storage is full — free up space first.");
+  });
+  it("says removed for a 404 or a re-read that found no row", () => {
+    expect(failureLine({ status: 404 }, ctx)).toBe("This title has been removed.");
+    expect(failureLine(null, { ...ctx, removed: true })).toBe("This title has been removed.");
+  });
+  it("says changed for a 409 or a re-read that found the row moved on", () => {
+    expect(failureLine({ status: 409 }, ctx)).toBe("This title was changed by someone else — check it first.");
+    expect(failureLine(null, { ...ctx, changed: true })).toBe("This title was changed by someone else — check it first.");
+  });
+  it("asks to try again when there was no answer or the hub failed", () => {
+    for (const e of [new Error("Failed to fetch"), { status: 400 }, { status: 500 }, { status: 503 }, null]) {
+      expect(failureLine(e, ctx)).toBe("Couldn’t add the title — try again.");
+    }
+  });
+});
+
+describe("storedDiffers", () => {
+  it("compares only the given keys, empty and missing alike", () => {
+    expect(storedDiffers({ a: "x", b: null, c: "other" }, { a: "x", b: undefined })).toBe(false);
+    expect(storedDiffers({ a: "x" }, { a: "y" })).toBe(true);
+  });
+  it("treats no row as different", () => {
+    expect(storedDiffers(undefined, { a: "x" })).toBe(true);
+    expect(storedDiffers(null, {})).toBe(true);
   });
 });

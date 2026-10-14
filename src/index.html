@@ -124,7 +124,7 @@
 import { esc, initial, memberColor, hubConfirm, searchMatch, glyph } from "/hub-sdk.js";
 import {
   genres as genresOf, moods as moodsOf, visibleTitles as visibleTitlesOf,
-  unwatchedPool, metaLine, stars, searchableFields, changedARow,
+  unwatchedPool, metaLine, stars, searchableFields, changedARow, outcomeUnknown, storedDiffers, failureLine,
 } from "./logic.js";
 
 const CONTEXT = window.__CONTEXT_URL ?? "";
@@ -171,7 +171,7 @@ async function dbq(sql, params = []) {
     body: JSON.stringify({ sql, params }),
   });
   const json = await res.json().catch(() => null);
-  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw Object.assign(new Error(json?.error || "Couldn’t reach the hub. Try again."), { status: res.status, code: json?.code });
   return json;
 }
 
@@ -238,40 +238,65 @@ function visibleTitles() { return visibleTitlesOf(titles, view, filterGenre, fil
 async function rereadTitles() {
   try { await loadTitles(); return titles; } catch (e) { console.error(e); return null; }
 }
-// The line for an update that changed no row: the title is gone, or the write was refused.
-function unsavedText(stored, id, line) {
-  return stored && !stored.some(x => x.id === id) ? "That title was already removed." : line;
+// The line for a write that changed no row, from the re-read: the title is
+// gone, or it is there in another state. A failed re-read is a plain failure.
+function unsavedText(stored, id, action) {
+  const there = stored?.some(x => x.id === id);
+  return failureLine(null, { action, thing: "title", removed: !!stored && !there, changed: !!stored && there });
 }
+const ADD = { action: "add the title", thing: "title" };
+const MARK = { action: "mark the title as watched", thing: "title" };
+const UNMARK = { action: "move the title back", thing: "title" };
+const REMOVE = { action: "remove the title", thing: "title" };
 
-async function addTitle(fields) {
+// A write whose answer was lost may have landed: it is looked up by the id or
+// stamp the dialog kept. undefined: it is not there, or could not be read.
+async function storedTitle(id) {
+  try { return (await dbq(`SELECT * FROM app_watchlist__titles WHERE id = ?`, [id])).rows?.[0]; }
+  catch (e) { console.error(e); return undefined; }
+}
+const SAVED_AS_FIRST = "Saved as first entered — check it and update what changed.";
+
+async function addTitle(fields, form) {
   const title = fields.title.trim();
   if (!title) return showError("Give the title a name.");
   const row = {
-    id: uid(), title, kind: fields.kind || "movie",
+    // The dialog's own id, kept across a second press: a save that landed
+    // unheard is found by it rather than made twice.
+    id: form ? (form.dataset.rowId ??= uid()) : uid(), title, kind: fields.kind || "movie",
     genre: fields.genre.trim(), mood: fields.mood.trim(), note: fields.note.trim(),
     status: "unwatched", rating: null,
     added_by_id: currentMember.id, added_by_name: currentMember.name,
     watched_by_name: "", watched_at: null, created_at: nowIso(),
   };
-  try {
-    if (DB) {
+  let note = "";
+  if (DB) {
+    try {
       await dbq(
         `INSERT INTO app_watchlist__titles
          (id, title, kind, genre, mood, note, status, rating, added_by_id, added_by_name, watched_by_name, watched_at, created_at)
          VALUES (?, ?, ?, ?, ?, ?, 'unwatched', NULL, ?, ?, '', NULL, ?)`,
         [row.id, row.title, row.kind, row.genre, row.mood, row.note, row.added_by_id, row.added_by_name, row.created_at]
       );
+    } catch (e) {
+      console.error(e);
+      const stored = outcomeUnknown(e) ? await storedTitle(row.id) : undefined;
+      if (!stored) return showError(failureLine(e, ADD));
+      // It landed on an earlier press. There is no edit, so a form changed
+      // since then shows the stored title and says so.
+      if (storedDiffers(stored, { title: row.title, kind: row.kind, genre: row.genre, mood: row.mood, note: row.note })) note = SAVED_AS_FIRST;
+      Object.assign(row, stored);
     }
-    titles = [row, ...titles];
-    await publishEvent("watchlist.title_added", row.id, {
-      title: row.title,
-      kind: row.kind,
-      genre: row.genre,
-      added_by_id: row.added_by_id,
-    });
-    closeModal();
-    showNotice(`Added “${row.title}”.`);
-  } catch (e) { console.error(e); showError("Couldn’t add the title — try again."); }
+  }
+  titles = [row, ...titles.filter(x => x.id !== row.id)];
+  await publishEvent("watchlist.title_added", row.id, {
+    title: row.title,
+    kind: row.kind,
+    genre: row.genre,
+    added_by_id: row.added_by_id,
+  });
+  closeModal();
+  if (note) showError(note); else showNotice(`Added “${row.title}”.`);
 }
 
 const markingWatched = new Set(); // ids with a mark in flight: a second tap is a second UPDATE and event
@@ -279,20 +304,35 @@ async function markWatched(id, rating) {
   const t = titles.find(x => x.id === id);
   if (!t || markingWatched.has(id)) return;
   markingWatched.add(id);
-  const watchedAt = nowIso();
+  // The dialog's own stamp, kept across a second press: a mark that landed
+  // unheard (the retry then changes nothing) is known by it, and finished once.
+  const form = modalEl;
+  const watchedAt = form ? (form.dataset.watchedAt ??= nowIso()) : nowIso();
+  let note = "";
   try {
     if (DB) {
-      const res = await dbq(
-        `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ? AND status = 'unwatched'`,
-        [rating, currentMember.name, watchedAt, id]
-      );
-      if (!changedARow(res)) {
+      let res = null, lost = false;
+      try {
+        res = await dbq(
+          `UPDATE app_watchlist__titles SET status = 'watched', rating = ?, watched_by_name = ?, watched_at = ? WHERE id = ? AND status = 'unwatched'`,
+          [rating, currentMember.name, watchedAt, id]
+        );
+      } catch (e) { if (!outcomeUnknown(e)) throw e; console.error(e); lost = true; }
+      const mine = lost || !changedARow(res) ? await storedTitle(id) : null;
+      if (mine && !storedDiffers(mine, { status: "watched", watched_at: watchedAt })) {
+        // Stored with this dialog's stamp. There is no rating edit, so a star
+        // changed since then shows the stored rating and says so.
+        if (mine.rating !== rating) note = SAVED_AS_FIRST;
+        rating = mine.rating;
+      } else if (lost) {
+        return showError(failureLine(null, MARK));
+      } else if (!changedARow(res)) {
         const stored = await rereadTitles();
         // Gone or already watched: nothing left to rate. Otherwise the dialog stays, as on a thrown failure.
         const now = stored?.find(x => x.id === id);
         if (stored && now?.status !== "unwatched") closeModal(); else if (stored) render();
         if (now && now.status !== "unwatched") return showError("That title was already marked as watched.");
-        return showError(unsavedText(stored, id, "Couldn’t mark the title as watched — try again."));
+        return showError(unsavedText(stored, id, MARK.action));
       }
     }
     // By id: a re-read in another handler may have replaced the list meanwhile.
@@ -305,8 +345,8 @@ async function markWatched(id, rating) {
       rating,
     });
     closeModal();
-    showNotice("Marked as watched.");
-  } catch (e) { console.error(e); showError("Couldn’t mark the title as watched — try again."); }
+    if (note) showError(note); else showNotice("Marked as watched.");
+  } catch (e) { console.error(e); showError(failureLine(e, MARK)); }
   finally { markingWatched.delete(id); }
 }
 
@@ -317,12 +357,12 @@ async function markUnwatched(id) {
       const res = await dbq(`UPDATE app_watchlist__titles SET status = 'unwatched', rating = NULL, watched_by_name = '', watched_at = NULL WHERE id = ?`, [id]);
       if (!changedARow(res)) {
         const stored = await rereadTitles();
-        return showError(unsavedText(stored, id, "Couldn’t move the title back — try again."));
+        return showError(unsavedText(stored, id, UNMARK.action));
       }
     }
     titles = titles.map(x => x.id === id ? { ...x, status: "unwatched", rating: null, watched_by_name: "", watched_at: null } : x);
     showNotice("Moved back to the watchlist.");
-  } catch (e) { console.error(e); showError("Couldn’t move the title back — try again."); }
+  } catch (e) { console.error(e); showError(failureLine(e, UNMARK)); }
 }
 
 async function removeTitle(id) {
@@ -336,12 +376,12 @@ async function removeTitle(id) {
       // Nothing deleted: already gone is what was asked for; still stored is a refusal.
       if (!changedARow(res)) {
         const stored = await rereadTitles();
-        if (!stored || stored.some(x => x.id === id)) return showError("Couldn’t remove the title — try again.");
+        if (!stored || stored.some(x => x.id === id)) return showError(unsavedText(stored, id, REMOVE.action));
       }
     }
     titles = titles.filter(x => x.id !== id);
     showNotice("Removed.");
-  } catch (e) { console.error(e); showError("Couldn’t remove the title — try again."); }
+  } catch (e) { console.error(e); showError(failureLine(e, REMOVE)); }
 }
 
 function surpriseMe() {
@@ -556,7 +596,7 @@ document.addEventListener("submit", (e) => {
   addTitle({
     title: val("f-title"), kind: val("f-kind"), genre: val("f-genre"),
     mood: val("f-mood"), note: val("f-note"),
-  }).finally(() => { if (btn) { btn.disabled = false; btn.textContent = "Add title"; } });
+  }, e.target).finally(() => { if (btn) { btn.disabled = false; btn.textContent = "Add title"; } });
 });
 
 refresh();
