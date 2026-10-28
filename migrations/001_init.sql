@@ -4,7 +4,7 @@
 -- private, so no row_policies are declared. `status` is on the encryption
 -- skip-list, so it can be filtered/counted in SQL (WHERE status = ...).
 CREATE TABLE IF NOT EXISTS app_watchlist__titles (
-  id             TEXT PRIMARY KEY,
+  id             TEXT NOT NULL PRIMARY KEY,
   title          TEXT NOT NULL,
   kind           TEXT NOT NULL DEFAULT 'movie',   -- 'movie' | 'show'
   genre          TEXT DEFAULT '',
